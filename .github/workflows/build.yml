@@ -104,13 +104,15 @@ jobs:
       - name: Generate PDF from README
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq pandoc texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended lmodern > /dev/null 2>&1
+          sudo apt-get install -y -qq pandoc texlive-xetex texlive-fonts-recommended lmodern > /dev/null 2>&1
           pandoc README.md -o BBA-Native-Libraries.pdf \
-            --pdf-engine=pdflatex \
+            --pdf-engine=xelatex \
             -V geometry:margin=1in \
             -V colorlinks=true \
             -V linkcolor=blue \
-            -V urlcolor=blue
+            -V urlcolor=blue \
+            -V mainfont="DejaVu Sans" \
+            -V monofont="DejaVu Sans Mono"
 
       - name: Create release
         uses: softprops/action-gh-release@v2
