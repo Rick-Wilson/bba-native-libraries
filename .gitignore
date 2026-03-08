@@ -1,0 +1,16 @@
+# Build output
+src/bin/
+src/obj/
+
+# Auto-generated
+src/GlobalUsings.g.cs
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo

@@ -1,0 +1,106 @@
+name: Build Native Libraries
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+            rid: osx-arm64
+            artifact: EPBotWrapper.dylib
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: EPBotWrapper.so
+          - os: windows-latest
+            rid: win-x64
+            artifact: EPBotWrapper.dll
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Build (Unix)
+        if: runner.os != 'Windows'
+        run: ./build.sh ${{ matrix.rid }}
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # Detect namespace from DLL
+          $detectDir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
+          @'
+          using System;
+          using System.Linq;
+          using System.Reflection;
+          var asm = Assembly.LoadFrom(Environment.GetCommandLineArgs()[1]);
+          var ns = asm.GetExportedTypes().FirstOrDefault()?.Namespace ?? "EPBot";
+          Console.Write(ns);
+          '@ | Set-Content "$detectDir/Program.cs"
+          @'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net10.0</TargetFramework>
+            </PropertyGroup>
+          </Project>
+          '@ | Set-Content "$detectDir/detect.csproj"
+
+          $dllPath = (Get-ChildItem dll/EPBot*.dll | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
+          $dllName = [System.IO.Path]::GetFileName($dllPath)
+          $ns = dotnet run --project "$detectDir/detect.csproj" -- $dllPath 2>$null
+          Remove-Item -Recurse -Force $detectDir
+          Write-Host "Detected namespace: $ns"
+
+          # Generate GlobalUsings
+          "global using EPBot = ${ns}.EPBot;" | Set-Content src/GlobalUsings.g.cs
+
+          # Update csproj
+          $csproj = Get-Content src/epbot-native.csproj -Raw
+          $csproj = $csproj -replace '<HintPath>.*?</HintPath>', "<HintPath>../dll/${dllName}</HintPath>"
+          if ($csproj -match '<RootNamespace>') {
+            $csproj = $csproj -replace '<RootNamespace>.*?</RootNamespace>', "<RootNamespace>${ns}</RootNamespace>"
+          } else {
+            $csproj = $csproj -replace '<Nullable>enable</Nullable>', "<Nullable>enable</Nullable>`n    <RootNamespace>${ns}</RootNamespace>"
+          }
+          $csproj | Set-Content src/epbot-native.csproj
+
+          dotnet publish src/epbot-native.csproj -r ${{ matrix.rid }} -c Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EPBotWrapper-${{ matrix.rid }}
+          path: src/bin/Release/net10.0/${{ matrix.rid }}/publish/${{ matrix.artifact }}
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
