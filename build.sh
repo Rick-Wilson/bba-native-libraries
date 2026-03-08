@@ -54,13 +54,16 @@ echo "Generated GlobalUsings.g.cs: EPBot = ${NAMESPACE}.EPBot"
 # ============================================================
 # 4. Update csproj to reference the correct DLL and namespace
 # ============================================================
+# Cross-platform sed in-place (macOS needs '' arg, Linux doesn't)
+sedi() { if [[ "$(uname -s)" == "Darwin" ]]; then sed -i '' "$@"; else sed -i "$@"; fi; }
+
 # Update HintPath to point to the actual DLL
-sed -i '' "s|<HintPath>.*</HintPath>|<HintPath>../dll/${DLL_NAME}</HintPath>|" "$SRC_DIR/epbot-native.csproj"
+sedi "s|<HintPath>.*</HintPath>|<HintPath>../dll/${DLL_NAME}</HintPath>|" "$SRC_DIR/epbot-native.csproj"
 # Update RootNamespace (if present) or add it
 if grep -q '<RootNamespace>' "$SRC_DIR/epbot-native.csproj"; then
-    sed -i '' "s|<RootNamespace>.*</RootNamespace>|<RootNamespace>${NAMESPACE}</RootNamespace>|" "$SRC_DIR/epbot-native.csproj"
+    sedi "s|<RootNamespace>.*</RootNamespace>|<RootNamespace>${NAMESPACE}</RootNamespace>|" "$SRC_DIR/epbot-native.csproj"
 else
-    sed -i '' "s|<Nullable>enable</Nullable>|<Nullable>enable</Nullable>\n    <RootNamespace>${NAMESPACE}</RootNamespace>|" "$SRC_DIR/epbot-native.csproj"
+    sedi "s|<Nullable>enable</Nullable>|<Nullable>enable</Nullable>\n    <RootNamespace>${NAMESPACE}</RootNamespace>|" "$SRC_DIR/epbot-native.csproj"
 fi
 
 # ============================================================
