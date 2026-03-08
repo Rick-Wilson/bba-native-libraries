@@ -48,6 +48,8 @@ bba-native-libraries/
 ├── LICENSE
 ├── .gitignore
 ├── build.sh               # Build script (detects namespace, runs dotnet publish)
+├── include/
+│   └── epbot.h            # C header for consumers of the native library
 ├── dll/                   # Edward's managed DLL(s) go here
 │   └── EPBot8739.dll
 └── src/                   # NativeAOT project
