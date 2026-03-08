@@ -101,10 +101,22 @@ jobs:
         with:
           path: artifacts
 
+      - name: Generate PDF from README
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq pandoc texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended lmodern > /dev/null 2>&1
+          pandoc README.md -o BBA-Native-Libraries.pdf \
+            --pdf-engine=pdflatex \
+            -V geometry:margin=1in \
+            -V colorlinks=true \
+            -V linkcolor=blue \
+            -V urlcolor=blue
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             artifacts/**/*
             include/epbot.h
+            BBA-Native-Libraries.pdf
           generate_release_notes: true
