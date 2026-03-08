@@ -9,7 +9,7 @@ Rust, C, C++, or any language that supports C FFI.
 
 ## How It Works
 
-1. **Input**: Edward's managed .NET DLL (e.g. `EPBot8739.dll`) — a standard .NET assembly
+1. **Input**: Edward's managed .NET DLL (e.g. `EPBot<version>.dll`) — a standard .NET assembly
    containing the EPBot bridge bidding engine. No source code required.
 
 2. **FFI Layer** (`src/EPBotFFI.cs`): A thin C FFI wrapper using `[UnmanagedCallersOnly]` that
@@ -51,7 +51,7 @@ bba-native-libraries/
 ├── include/
 │   └── epbot.h            # C header for consumers of the native library
 ├── dll/                   # Edward's managed DLL(s) go here
-│   └── EPBot8739.dll
+│   └── EPBot<version>.dll
 └── src/                   # NativeAOT project
     ├── epbot-native.csproj
     ├── EPBotFFI.cs        # Thin FFI exports

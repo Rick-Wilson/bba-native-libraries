@@ -4,7 +4,7 @@ Native platform libraries for the **EPBot bridge bidding engine** by Edward Piwo
 
 ## What This Does
 
-Edward's EPBot engine is distributed as a **.NET managed DLL** (e.g. `EPBot8739.dll`). This is a standard .NET assembly that requires the .NET runtime to execute. This project takes that managed DLL and compiles it into **self-contained native libraries** that run without any .NET runtime dependency:
+Edward's EPBot engine is distributed as a **.NET managed DLL** (e.g. `EPBot<version>.dll`). This is a standard .NET assembly that requires the .NET runtime to execute. This project takes that managed DLL and compiles it into **self-contained native libraries** that run without any .NET runtime dependency:
 
 | Platform       | Output                  | Size   |
 |----------------|-------------------------|--------|
@@ -113,7 +113,7 @@ bba-native-libraries/
 ├── include/
 │   └── epbot.h             # C header — the interface contract
 ├── dll/
-│   └── EPBot8739.dll       # Edward's managed .NET DLL (input)
+│   └── EPBot<version>.dll  # Edward's managed .NET DLL (input)
 └── src/
     ├── epbot-native.csproj # NativeAOT project configuration
     └── EPBotFFI.cs         # Thin FFI layer (66 C exports)
